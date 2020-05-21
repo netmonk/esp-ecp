@@ -356,7 +356,7 @@ runMQTBSequence = true;
     currentTime = millis();
    // if (currentTime >= 4000 && currentTime < 6000) {
           dshotUserInputValue = dshot50;
-          delay(5000);
+          delay(1);
     // } else if (currentTime >= 6000 && currentTime < 8000) {
     //   dshotUserInputValue = dshotidle;
     // } else if (currentTime >= 8000 && currentTime < 10000) {

@@ -50,6 +50,10 @@ uint32_t rpmMAX = 0;
 uint32_t kv = 0;
 uint32_t kvMax = 0;
 
+const int potPin = 34;
+int potValue = 0;
+int dshot = 0;
+
 void gotTouch4() {
   temperatureMax = 0;
   voltageMin = 99;
@@ -345,38 +349,46 @@ void loop() {
   //   dshotOutput(0, false);
   //   delay(100);
   // }
-  printTelemetry = false;
+  // printTelemetry = false;
   
-runMQTBSequence = true;
+  potValue = 4095-analogRead(potPin);
+  Serial.println(potValue);
+  dshot = potValue / 2;
+  if ( dshot < 48 ) { 
+    dshotUserInputValue = 48; 
+    } else {
+    dshotUserInputValue = dshot;
+    } 
 
+  Serial.println(dshotUserInputValue); 
 
-#ifdef MINIQUADTESTBENCH
-  if (runMQTBSequence) {
-    Serial.print("entering miniquadtest\n");
-    currentTime = millis();
-   // if (currentTime >= 4000 && currentTime < 6000) {
-          dshotUserInputValue = dshot50;
-          delay(1);
-    // } else if (currentTime >= 6000 && currentTime < 8000) {
-    //   dshotUserInputValue = dshotidle;
-    // } else if (currentTime >= 8000 && currentTime < 10000) {
-    //   dshotUserInputValue = dshot75;
-    // } else if (currentTime >= 10000 && currentTime < 12000) {
-    //   dshotUserInputValue = dshotidle;
-    // } else if (currentTime >= 12000 && currentTime < 14000) {
-    //   dshotUserInputValue = dshotmax;
-    // } else if (currentTime >= 14000 && currentTime < 16000) {
-    //   dshotUserInputValue = dshotmin;
-    // } else if (currentTime >= 16000 && currentTime < 22000) {
-    //   dshotUserInputValue = dshotmin + (currentTime - 16000) * (dshotmax - dshotmin) / 6000.0;
-    // } else if (currentTime >= 24000 && currentTime < 26000) {
-    //   dshotUserInputValue = dshotidle;
-    // } else if (currentTime >= 26000 && currentTime < 28000) {
-    //   printTelemetry = false;
-    //   dshotUserInputValue = 0;
-    //}
-  }
-#endif
+// #ifdef MINIQUADTESTBENCH
+//   if (runMQTBSequence) {
+//     Serial.print("entering miniquadtest\n");
+//     currentTime = millis();
+//    // if (currentTime >= 4000 && currentTime < 6000) {
+//           dshotUserInputValue = dshot50;
+//           delay(1);
+//     // } else if (currentTime >= 6000 && currentTime < 8000) {
+//     //   dshotUserInputValue = dshotidle;
+//     // } else if (currentTime >= 8000 && currentTime < 10000) {
+//     //   dshotUserInputValue = dshot75;
+//     // } else if (currentTime >= 10000 && currentTime < 12000) {
+//     //   dshotUserInputValue = dshotidle;
+//     // } else if (currentTime >= 12000 && currentTime < 14000) {
+//     //   dshotUserInputValue = dshotmax;
+//     // } else if (currentTime >= 14000 && currentTime < 16000) {
+//     //   dshotUserInputValue = dshotmin;
+//     // } else if (currentTime >= 16000 && currentTime < 22000) {
+//     //   dshotUserInputValue = dshotmin + (currentTime - 16000) * (dshotmax - dshotmin) / 6000.0;
+//     // } else if (currentTime >= 24000 && currentTime < 26000) {
+//     //   dshotUserInputValue = dshotidle;
+//     // } else if (currentTime >= 26000 && currentTime < 28000) {
+//     //   printTelemetry = false;
+//     //   dshotUserInputValue = 0;
+//     //}
+//   }
+//#endif
 //resetMaxMinValues();
 }
 

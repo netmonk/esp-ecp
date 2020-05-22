@@ -53,6 +53,8 @@ uint32_t kvMax = 0;
 const int potPin = 34;
 int potValue = 0;
 int dshot = 0;
+int i,j = 0;
+
 
 void gotTouch4() {
   temperatureMax = 0;
@@ -160,103 +162,103 @@ void IRAM_ATTR getTelemetry() {
   requestTelemetry = true;
 }
 
-void startTelemetryTimer() {
-  Serial.print("starting telemetry timer\n"); 
-  timer = timerBegin(0, 80, true); // timer_id = 0; divider=80; countUp = true;
-  timerAttachInterrupt(timer, &getTelemetry, true); // edge = true
-  timerAlarmWrite(timer, 20000, true);  //1000 = 1 ms
-  timerAlarmEnable(timer);
-}
+// void startTelemetryTimer() {
+//   Serial.print("starting telemetry timer\n"); 
+//   timer = timerBegin(0, 80, true); // timer_id = 0; divider=80; countUp = true;
+//   timerAttachInterrupt(timer, &getTelemetry, true); // edge = true
+//   timerAlarmWrite(timer, 20000, true);  //1000 = 1 ms
+//   timerAlarmEnable(timer);
+// }
 
 // Second core used to handle dshot packets
-void secondCoreTask( void * pvParameters ) {
- Serial.print("Starting second core task\n"); 
-  while (1) {
+// void secondCoreTask( void * pvParameters ) {
+//  Serial.print("Starting second core task\n"); 
+//   while (1) {
 
-    dshotOutput(dshotUserInputValue, requestTelemetry);
-    //Serial.print("sending dshot command with value %u", (unsigned)dshotUserInputValue); 
-    if (requestTelemetry) {
-      requestTelemetry = false;
-      receivedBytes = 0;
-    }
+//     dshotOutput(dshotUserInputValue, requestTelemetry);
+//     //Serial.print("sending dshot command with value %u", (unsigned)dshotUserInputValue); 
+//     // if (requestTelemetry) {
+//     //   requestTelemetry = false;
+//     //   receivedBytes = 0;
+//     // }
 
-    delay(1);
+//     delay(1);
 
-  }
-}
+//   }
+// }
 
-void receiveTelemtrie() {
-  static uint8_t SerialBuf[10];
+// void receiveTelemtrie() {
+//   static uint8_t SerialBuf[10];
 
-  if (MySerial.available()) {
-    SerialBuf[receivedBytes] = MySerial.read();
-    receivedBytes++;
-  }
+//   if (MySerial.available()) {
+//     SerialBuf[receivedBytes] = MySerial.read();
+//     receivedBytes++;
+//   }
 
-  if (receivedBytes > 9) { // transmission complete
+//   if (receivedBytes > 9) { // transmission complete
 
-    uint8_t crc8 = get_crc8(SerialBuf, 9); // get the 8 bit CRC
+//     uint8_t crc8 = get_crc8(SerialBuf, 9); // get the 8 bit CRC
 
-    if (crc8 != SerialBuf[9]) {
-      //                Serial.println("CRC transmission failure");
+//     if (crc8 != SerialBuf[9]) {
+//       //                Serial.println("CRC transmission failure");
 
-      // Empty Rx Serial of garbage telemtry
-      while (MySerial.available())
-        MySerial.read();
+//       // Empty Rx Serial of garbage telemtry
+//       while (MySerial.available())
+//         MySerial.read();
 
-      requestTelemetry = true;
+//       requestTelemetry = true;
 
-      return; // transmission failure
-    }
+//       return; // transmission failure
+//     }
 
-    // compute the received values
-    ESC_telemetrie[0] = SerialBuf[0]; // temperature
-    ESC_telemetrie[1] = (SerialBuf[1] << 8) | SerialBuf[2]; // voltage
-    ESC_telemetrie[2] = (SerialBuf[3] << 8) | SerialBuf[4]; // Current
-    ESC_telemetrie[3] = (SerialBuf[5] << 8) | SerialBuf[6]; // used mA/h
-    ESC_telemetrie[4] = (SerialBuf[7] << 8) | SerialBuf[8]; // eRpM *100
+//     // compute the received values
+//     ESC_telemetrie[0] = SerialBuf[0]; // temperature
+//     ESC_telemetrie[1] = (SerialBuf[1] << 8) | SerialBuf[2]; // voltage
+//     ESC_telemetrie[2] = (SerialBuf[3] << 8) | SerialBuf[4]; // Current
+//     ESC_telemetrie[3] = (SerialBuf[5] << 8) | SerialBuf[6]; // used mA/h
+//     ESC_telemetrie[4] = (SerialBuf[7] << 8) | SerialBuf[8]; // eRpM *100
 
-    requestTelemetry = true;
+//     requestTelemetry = true;
 
-    if (!runMQTBSequence) { // Do not update during MQTB sequence.  Slows serial output.
-      updateDisplay();
-    }
+//     if (!runMQTBSequence) { // Do not update during MQTB sequence.  Slows serial output.
+//       updateDisplay();
+//     }
 
 
-    if (printTelemetry) {
-      Serial.print(millis());
-      Serial.print(",");
-      Serial.print(dshotUserInputValue);
-      Serial.print(",");
-      //      Serial.print("Voltage (V): ");
-      Serial.print(ESC_telemetrie[1] / 100.0);
-      Serial.print(",");
-      //      Serial.print("Current (A): ");
-      Serial.print(ESC_telemetrie[2] / 10.0);
-      Serial.print(",");
-      //      Serial.print("RPM : ");
-      Serial.print(ESC_telemetrie[4] * 100 / (MOTOR_POLES / 2));
-      Serial.print(",");
-      // Thrust
-      Serial.println(thrust);
-    }
+//     if (printTelemetry) {
+//       Serial.print(millis());
+//       Serial.print(",");
+//       Serial.print(dshotUserInputValue);
+//       Serial.print(",");
+//       //      Serial.print("Voltage (V): ");
+//       Serial.print(ESC_telemetrie[1] / 100.0);
+//       Serial.print(",");
+//       //      Serial.print("Current (A): ");
+//       Serial.print(ESC_telemetrie[2] / 10.0);
+//       Serial.print(",");
+//       //      Serial.print("RPM : ");
+//       Serial.print(ESC_telemetrie[4] * 100 / (MOTOR_POLES / 2));
+//       Serial.print(",");
+//       // Thrust
+//       Serial.println(thrust);
+//     }
 
-    temperature = 0.9 * temperature + 0.1 * ESC_telemetrie[0];
-    if (temperature > temperatureMax) {
-      temperatureMax = temperature;
-    }
+//     temperature = 0.9 * temperature + 0.1 * ESC_telemetrie[0];
+//     if (temperature > temperatureMax) {
+//       temperatureMax = temperature;
+//     }
 
-    voltage = 0.9 * voltage + 0.1 * (ESC_telemetrie[1] / 100.0);
-    if (voltage < voltageMin) {
-      voltageMin = voltage;
-    }
+//     voltage = 0.9 * voltage + 0.1 * (ESC_telemetrie[1] / 100.0);
+//     if (voltage < voltageMin) {
+//       voltageMin = voltage;
+//     }
 
-    current = 0.9 * current + 0.1 * (ESC_telemetrie[2] * 100);
-    if (current > currentMax) {
-      currentMax = current;
-    }
-  }
-}
+//     current = 0.9 * current + 0.1 * (ESC_telemetrie[2] * 100);
+//     if (current > currentMax) {
+//       currentMax = current;
+//     }
+//   }
+// }
  
 
 void setup() {
@@ -281,7 +283,7 @@ void setup() {
   uint8_t ibeep = 0;
   while (millis() < 3500) {
     dshotOutput(0, false);
-    delay(1000);
+    delay(1);
 
     display.clear();
     ibeep++;
@@ -311,21 +313,21 @@ void setup() {
   requestTelemetry = false;
 
 
-  startTelemetryTimer(); // Timer used to request tlm continually in case ESC rcv bad packet
+//  startTelemetryTimer(); // Timer used to request tlm continually in case ESC rcv bad packet
 
-  xTaskCreatePinnedToCore(secondCoreTask, "Task1", 10000, NULL, 1, &Task1, 0);
+  // xTaskCreatePinnedToCore(secondCoreTask, "Task1", 10000, NULL, 1, &Task1, 0);
 
-  Serial.print("Time (ms)");
-  Serial.print(",");
-  Serial.print("dshot");
-  Serial.print(",");
-  Serial.print("Voltage (V)");
-  Serial.print(",");
-  Serial.print("Current (A)");
-  Serial.print(",");
-  Serial.print("RPM");
-  Serial.print(",");
-  Serial.println("Thrust (g)");
+  // Serial.print("Time (ms)");
+  // Serial.print(",");
+  // Serial.print("dshot");
+  // Serial.print(",");
+  // Serial.print("Voltage (V)");
+  // Serial.print(",");
+  // Serial.print("Current (A)");
+  // Serial.print(",");
+  // Serial.print("RPM");
+  // Serial.print(",");
+  // Serial.println("Thrust (g)");
 
   dshotUserInputValue = dshotidle; 
   
@@ -345,23 +347,29 @@ void loop() {
   printTelemetry = false ;
   //dshotUserInputValue = 500;
   
-  // while (millis() < 3500) {
-  //   dshotOutput(0, false);
-  //   delay(100);
-  // }
-  // printTelemetry = false;
-  
+  while (millis() < 3500) {
+    dshotOutput(0, false);
+    delay(100);
+  }
+  printTelemetry = false;
+  j=0;
+  for ( i=0; i< 20; i++) {
+   j = j + 4095-analogRead(potPin);
+  }
+
   potValue = 4095-analogRead(potPin);
-  Serial.println(potValue);
-  dshot = potValue / 2;
-  if ( dshot < 48 ) { 
-    dshotUserInputValue = 48; 
+  Serial.println(j/40);
+  dshot = j / 40;
+  if ( dshot < dshotidle ) { 
+    dshotUserInputValue = dshotidle; 
     } else {
     dshotUserInputValue = dshot;
     } 
 
+//dshotUserInputValue = 500;
+dshotOutput(dshotUserInputValue, false); 
   Serial.println(dshotUserInputValue); 
-
+delay(1);
 // #ifdef MINIQUADTESTBENCH
 //   if (runMQTBSequence) {
 //     Serial.print("entering miniquadtest\n");

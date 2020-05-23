@@ -15,4 +15,4 @@ You can find a video of the exemple here: (https://streamable.com/dxvt4n)
 
 This code was first based on : 
 [JyeSmith dshot-esc-test](https://github.com/JyeSmith/dshot-esc-tester)
-Big shout outs to [@yeSmith](https://github.com/JyeSmith)
+Big shout outs to [@JyeSmith](https://github.com/JyeSmith)

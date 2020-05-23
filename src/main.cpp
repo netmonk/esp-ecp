@@ -21,6 +21,10 @@ rmt_obj_t* rmt_send = NULL;
 hw_timer_t * timer = NULL;
 
 HardwareSerial MySerial(1);
+volatile int interruptCounter; 
+int totalInterruptCounter;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
 
 SSD1306Wire display(0x3c, 21, 22);  // 21 and 22 are default pins
 
@@ -56,19 +60,6 @@ int dshot = 0;
 int i,j = 0;
 
 
-void gotTouch4() {
-  temperatureMax = 0;
-  voltageMin = 99;
-  currentMax = 0;
-  erpmMax = 0;
-  rpmMAX = 0;
-  kvMax = 0;
-  runMQTBSequence = false;
-  printTelemetry = true;
-}
-void resetMaxMinValues() {
-  gotTouch4();
-}
 void updateDisplay() {
   display.clear();
 
@@ -159,109 +150,24 @@ uint8_t get_crc8(uint8_t *Buf, uint8_t BufLen) {
   return (crc);
 } 
 
-// void startTelemetryTimer() {
-//   Serial.print("starting telemetry timer\n"); 
-//   timer = timerBegin(0, 80, true); // timer_id = 0; divider=80; countUp = true;
-//   timerAttachInterrupt(timer, &getTelemetry, true); // edge = true
-//   timerAlarmWrite(timer, 20000, true);  //1000 = 1 ms
-//   timerAlarmEnable(timer);
-// }
-
-// Second core used to handle dshot packets
-// void secondCoreTask( void * pvParameters ) {
-//  Serial.print("Starting second core task\n"); 
-//   while (1) {
-
-//     dshotOutput(dshotUserInputValue, requestTelemetry);
-//     //Serial.print("sending dshot command with value %u", (unsigned)dshotUserInputValue); 
-//     // if (requestTelemetry) {
-//     //   requestTelemetry = false;
-//     //   receivedBytes = 0;
-//     // }
-
-//     delay(1);
-
-//   }
-// }
-
-// void receiveTelemtrie() {
-//   static uint8_t SerialBuf[10];
-
-//   if (MySerial.available()) {
-//     SerialBuf[receivedBytes] = MySerial.read();
-//     receivedBytes++;
-//   }
-
-//   if (receivedBytes > 9) { // transmission complete
-
-//     uint8_t crc8 = get_crc8(SerialBuf, 9); // get the 8 bit CRC
-
-//     if (crc8 != SerialBuf[9]) {
-//       //                Serial.println("CRC transmission failure");
-
-//       // Empty Rx Serial of garbage telemtry
-//       while (MySerial.available())
-//         MySerial.read();
-
-//       requestTelemetry = true;
-
-//       return; // transmission failure
-//     }
-
-//     // compute the received values
-//     ESC_telemetrie[0] = SerialBuf[0]; // temperature
-//     ESC_telemetrie[1] = (SerialBuf[1] << 8) | SerialBuf[2]; // voltage
-//     ESC_telemetrie[2] = (SerialBuf[3] << 8) | SerialBuf[4]; // Current
-//     ESC_telemetrie[3] = (SerialBuf[5] << 8) | SerialBuf[6]; // used mA/h
-//     ESC_telemetrie[4] = (SerialBuf[7] << 8) | SerialBuf[8]; // eRpM *100
-
-//     requestTelemetry = true;
-
-//     if (!runMQTBSequence) { // Do not update during MQTB sequence.  Slows serial output.
-//       updateDisplay();
-//     }
-
-
-//     if (printTelemetry) {
-//       Serial.print(millis());
-//       Serial.print(",");
-//       Serial.print(dshotUserInputValue);
-//       Serial.print(",");
-//       //      Serial.print("Voltage (V): ");
-//       Serial.print(ESC_telemetrie[1] / 100.0);
-//       Serial.print(",");
-//       //      Serial.print("Current (A): ");
-//       Serial.print(ESC_telemetrie[2] / 10.0);
-//       Serial.print(",");
-//       //      Serial.print("RPM : ");
-//       Serial.print(ESC_telemetrie[4] * 100 / (MOTOR_POLES / 2));
-//       Serial.print(",");
-//       // Thrust
-//       Serial.println(thrust);
-//     }
-
-//     temperature = 0.9 * temperature + 0.1 * ESC_telemetrie[0];
-//     if (temperature > temperatureMax) {
-//       temperatureMax = temperature;
-//     }
-
-//     voltage = 0.9 * voltage + 0.1 * (ESC_telemetrie[1] / 100.0);
-//     if (voltage < voltageMin) {
-//       voltageMin = voltage;
-//     }
-
-//     current = 0.9 * current + 0.1 * (ESC_telemetrie[2] * 100);
-//     if (current > currentMax) {
-//       currentMax = current;
-//     }
-//   }
-// }
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter++;
+  portEXIT_CRITICAL_ISR(&timerMux);
  
-
+}
 void setup() {
- Serial.begin(115200);
+  Serial.begin(115200);
   Serial.print("init starting\n");
   //MySerial.begin(115200, SERIAL_8N1, 16, 17);
+
+
+ // Timer init 
+  timer = timerBegin(0,80,true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 500, true);
+  timerAlarmEnable(timer);
+
 
   if ((rmt_send = rmtInit(5, true, RMT_MEM_64)) == NULL) {
     Serial.println("init sender failed\n");
@@ -302,98 +208,35 @@ void setup() {
     display.display();
   }
 
-
-  // Empty Rx Serial of garbage telemtry
-  //while (MySerial.available())
-  //  MySerial.read();
-
-  requestTelemetry = false;
-
-
-//  startTelemetryTimer(); // Timer used to request tlm continually in case ESC rcv bad packet
-
-  // xTaskCreatePinnedToCore(secondCoreTask, "Task1", 10000, NULL, 1, &Task1, 0);
-
-  // Serial.print("Time (ms)");
-  // Serial.print(",");
-  // Serial.print("dshot");
-  // Serial.print(",");
-  // Serial.print("Voltage (V)");
-  // Serial.print(",");
-  // Serial.print("Current (A)");
-  // Serial.print(",");
-  // Serial.print("RPM");
-  // Serial.print(",");
-  // Serial.println("Thrust (g)");
-
   dshotUserInputValue = dshotidle; 
-  
-#ifdef MINIQUADTESTBENCH
-  dshotUserInputValue = dshotidle;
-  runMQTBSequence = true;
-  display.clear();
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawString(0,  0, "Running MQTB Sequence...");
-  display.display();
-#endif
 
 }
 
 void loop() {
   Serial.print("entering loop\n"); 
   printTelemetry = false ;
-  //dshotUserInputValue = 500;
-  
-  while (millis() < 3500) {
-    dshotOutput(0, false);
-    delay(100);
-  }
-  printTelemetry = false;
+// averaging the last 20 reads on potentiometer Pin  
   j=0;
   for ( i=0; i< 20; i++) {
    j = j + 4095-analogRead(potPin);
   }
 
-  potValue = 4095-analogRead(potPin);
-  Serial.println(j/40);
+// computing throttle value (dshot) to send to esc
+// if under dshotidle, then set it to dshotidle value.
   dshot = j / 40;
   if ( dshot < dshotidle ) { 
     dshotUserInputValue = dshotidle; 
     } else {
     dshotUserInputValue = dshot;
     } 
-
-//dshotUserInputValue = 500;
-dshotOutput(dshotUserInputValue, false); 
-  Serial.println(dshotUserInputValue); 
-delay(1);
-// #ifdef MINIQUADTESTBENCH
-//   if (runMQTBSequence) {
-//     Serial.print("entering miniquadtest\n");
-//     currentTime = millis();
-//    // if (currentTime >= 4000 && currentTime < 6000) {
-//           dshotUserInputValue = dshot50;
-//           delay(1);
-//     // } else if (currentTime >= 6000 && currentTime < 8000) {
-//     //   dshotUserInputValue = dshotidle;
-//     // } else if (currentTime >= 8000 && currentTime < 10000) {
-//     //   dshotUserInputValue = dshot75;
-//     // } else if (currentTime >= 10000 && currentTime < 12000) {
-//     //   dshotUserInputValue = dshotidle;
-//     // } else if (currentTime >= 12000 && currentTime < 14000) {
-//     //   dshotUserInputValue = dshotmax;
-//     // } else if (currentTime >= 14000 && currentTime < 16000) {
-//     //   dshotUserInputValue = dshotmin;
-//     // } else if (currentTime >= 16000 && currentTime < 22000) {
-//     //   dshotUserInputValue = dshotmin + (currentTime - 16000) * (dshotmax - dshotmin) / 6000.0;
-//     // } else if (currentTime >= 24000 && currentTime < 26000) {
-//     //   dshotUserInputValue = dshotidle;
-//     // } else if (currentTime >= 26000 && currentTime < 28000) {
-//     //   printTelemetry = false;
-//     //   dshotUserInputValue = 0;
-//     //}
-//   }
-//#endif
-//resetMaxMinValues();
+// dealing with interrupt counter and sending dshot frame to esc
+  if (interruptCounter > 0) {
+    portENTER_CRITICAL(&timerMux);
+    interruptCounter--;
+    portEXIT_CRITICAL(&timerMux);
+ 
+    totalInterruptCounter++;
+    dshotOutput(dshotUserInputValue, false); 
+  }  
 }
 

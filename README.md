@@ -1,6 +1,6 @@
 # esp-ecp
 
-# Explanations
+## Explanations
 
 This project is first attempt to user esp32 mcu as a flight controller for quadcopter.
 

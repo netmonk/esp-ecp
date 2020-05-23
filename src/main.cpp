@@ -158,9 +158,6 @@ uint8_t get_crc8(uint8_t *Buf, uint8_t BufLen) {
   for ( i = 0; i < BufLen; i++) crc = update_crc8(Buf[i], crc);
   return (crc);
 } 
-void IRAM_ATTR getTelemetry() {
-  requestTelemetry = true;
-}
 
 // void startTelemetryTimer() {
 //   Serial.print("starting telemetry timer\n"); 

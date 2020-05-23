@@ -1,5 +1,7 @@
 # esp-ecp
 
+# Explanations
+
 This project is first attempt to user esp32 mcu as a flight controller for quadcopter.
 
 The first step is to get engine running. 
@@ -10,8 +12,19 @@ The current setup is based on a potentiometer plugged on the pin d34, and the ma
 
 The esc input is plugged on pin 5 of the devkit, and the ground of the esc signal is also attached to the ground pin of the devkit. 
 
-You can find a video of the exemple here: (https://streamable.com/dxvt4n) 
+You can find a video of the exemple here: [https://streamable.com/dxvt4n](https://streamable.com/dxvt4n) 
 
+
+## Hardware setup 
+
+* esp32 devkitv1 esp-wroom-32
+* esc racerstar rsv2 (blheli_s)
+* motor is racerstar 2205 at 2400kv
+* power board distribution matek system 4*25amp.
+* potentiometer
+* a breadboard and few cables :)
+
+## Shoutouts
 
 This code was first based on : 
 [JyeSmith dshot-esc-test](https://github.com/JyeSmith/dshot-esc-tester)

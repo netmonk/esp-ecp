@@ -12,7 +12,8 @@ The current setup is based on a potentiometer plugged on the pin d34, and the ma
 
 The esc input is plugged on pin 5 of the devkit, and the ground of the esc signal is also attached to the ground pin of the devkit. 
 
-You can find a video of the exemple here: [https://streamable.com/dxvt4n](https://streamable.com/dxvt4n) 
+You can find a video of the exemple here: [https://streamable.com/dxvt4n](https://streamable.com/dxvt4n)
+
 More successfull video here : [https://streamable.com/aua209](https://streamable.com/aua209)
 
 

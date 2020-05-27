@@ -16,6 +16,8 @@ You can find a video of the exemple here: [https://streamable.com/dxvt4n](https:
 
 More successfull video here : [https://streamable.com/aua209](https://streamable.com/aua209)
 
+and with a blheli_32 esc from aikon and more recent emax 2205 2300kv motor : [https://streamable.com/c3l6em](https://streamable.com/c3l6em)
+
 
 ## Hardware setup 
 

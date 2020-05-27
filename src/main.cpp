@@ -153,7 +153,7 @@ void setup() {
  // Timer init, prescaler 80, divider 500 => 2khz
   timer = timerBegin(0,80,true);
   timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, 500, true);
+  timerAlarmWrite(timer, 1000, true);
   timerAlarmEnable(timer);
   dshotUserInputValue = dshotidle; 
 }
@@ -169,7 +169,7 @@ void loop() {
   totalInterruptCounter++;
   } 
   
-  if (totalInterruptCounter % 500  == 0) {
+  if (totalInterruptCounter % 250  == 0) {
     totalInterruptCounter = 0;
     if ( ( dshotUserInputValue < 1390 && up ) || ( dshotUserInputValue > dshotidle && !up )) {
       
